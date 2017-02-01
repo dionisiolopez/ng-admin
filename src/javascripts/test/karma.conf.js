@@ -13,8 +13,7 @@ module.exports = function (config) {
         frameworks: ['jasmine'],
         files: [
             '../../node_modules/angular/angular.js',
-            '../../node_modules/angular-bootstrap/ui-bootstrap.min.js',
-            '../../node_modules/angular-bootstrap/ui-bootstrap-tpls.min.js',
+            '../../node_modules/angular-ui-bootstrap/dist/ui-bootstrap-tpls.js',
             '../../node_modules/angular-mocks/angular-mocks.js',
             '../../node_modules/angular-numeraljs/dist/angular-numeraljs.min.js',
             '../../node_modules/numeral/numeral.js',
@@ -24,7 +23,18 @@ module.exports = function (config) {
             'test/function.bind.shim.js',
             'test/unit/**/*.js'
         ],
-        plugins: ['karma-webpack', 'karma-jasmine', 'karma-chrome-launcher', 'karma-phantomjs-launcher'],
+        mochaReporter: {
+            showDiff: true,
+            ignoreSkipped: true,
+        },
+        reporters: ['mocha'],
+        plugins: [
+            'karma-webpack',
+            'karma-jasmine',
+            'karma-chrome-launcher',
+            'karma-phantomjs-launcher',
+            'karma-mocha-reporter',
+        ],
         preprocessors: {
             'ng-admin.js': 'webpack',
             'test/**/*.js': 'webpack'

@@ -7,8 +7,7 @@ export default function maExportToCsvButton ($stateParams, Papa, notification, A
             datastore: '&'
         },
         link: function(scope) {
-            scope.label = scope.label || 'Export';
-
+            scope.label = scope.label || 'EXPORT';
             scope.datastore = scope.datastore();
             scope.entity = scope.entity();
             var exportView = scope.entity.exportView();
@@ -20,14 +19,13 @@ export default function maExportToCsvButton ($stateParams, Papa, notification, A
                 }
                 exportView.fields(exportFields);
                 exportView.filters(listView.filters());
+                exportView.name(listView.name()); // to enable reuse of sortField
             }
             scope.has_export = exportView.fields().length > 0;
             var formatEntry = entryFormatter.getFormatter(exportView.fields());
 
             scope.exportToCsv = function () {
                 var rawEntries;
-                var nonOptimizedReferencedData;
-                var optimizedReferencedData;
 
                 ReadQueries.getAll(exportView, -1, $stateParams.search, $stateParams.sortField, $stateParams.sortDir)
                     .then(response => {
@@ -56,13 +54,20 @@ export default function maExportToCsvButton ($stateParams, Papa, notification, A
                         for (var i = entries.length - 1; i >= 0; i--) {
                             results[i] = formatEntry(entries[i]);
                         }
-                        var csv = Papa.unparse(results);
+                        var csv = Papa.unparse(results, listView.exportOptions());
                         var fakeLink = document.createElement('a');
                         document.body.appendChild(fakeLink);
 
-                        fakeLink.setAttribute('href', 'data:application/octet-stream;charset=utf-8,' + encodeURIComponent(csv));
-                        fakeLink.setAttribute('download', scope.entity.name() + '.csv');
-                        fakeLink.click();
+                        const blobName = `${scope.entity.name()}.csv`;
+
+                        if (window.navigator && window.navigator.msSaveOrOpenBlob) { // Manage IE11+ & Edge
+                            var blob = new Blob([csv], { type: 'text/csv' });
+                            window.navigator.msSaveOrOpenBlob(blob, blobName);
+                        } else {
+                            fakeLink.setAttribute('href', 'data:application/octet-stream;charset=utf-8,' + encodeURIComponent(csv));
+                            fakeLink.setAttribute('download', blobName);
+                            fakeLink.click();
+                        }
                     }, function (error) {
                         notification.log(error.message, {addnCls: 'humane-flatty-error'});
                     });
@@ -71,7 +76,7 @@ export default function maExportToCsvButton ($stateParams, Papa, notification, A
         template:
 `<span ng-if="has_export">
     <a class="btn btn-default" ng-click="exportToCsv()">
-        <span class="glyphicon glyphicon-download" aria-hidden="true"></span>&nbsp;<span class="hidden-xs">{{ ::label }}</span>
+        <span class="glyphicon glyphicon-download" aria-hidden="true"></span>&nbsp;<span class="hidden-xs" translate="{{ ::label }}"></span>
     </a>
 </span>`
     };

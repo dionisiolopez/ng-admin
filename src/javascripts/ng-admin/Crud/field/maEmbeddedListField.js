@@ -32,8 +32,12 @@ export default function maEmbeddedListField() {
                     .createArrayFromRest(scope.value || [], targetFields, targetEntityName, targetEntity.identifier().name())
                     .sort((entry1, entry2) => {
                         // use < and > instead of substraction to sort strings properly
-                        if (entry1.values[sortField] > entry2.values[sortField]) return sortDir;
-                        if (entry1.values[sortField] < entry2.values[sortField]) return -1 * sortDir;
+                        if (entry1.values[sortField] > entry2.values[sortField]) {
+                            return sortDir;
+                        }
+                        if (entry1.values[sortField] < entry2.values[sortField]) {
+                            return -1 * sortDir;
+                        }
                         return 0;
                     })
                     .filter(filterFunc);
@@ -42,7 +46,9 @@ export default function maEmbeddedListField() {
                     scope.entries = scope.entries.filter(e => e !== entry);
                 };
                 scope.$watch('entries', (newEntries, oldEntries) => {
-                    if (newEntries === oldEntries) return;
+                    if (newEntries === oldEntries) {
+                        return;
+                    }
                     scope.value = newEntries.map(e => e.transformToRest(targetFields));
                 }, true);
             }
@@ -51,7 +57,7 @@ export default function maEmbeddedListField() {
 <div class="row"><div class="col-sm-12">
     <ng-form ng-repeat="entry in entries track by $index" class="subentry" name="subform_{{$index}}" ng-init="formName = 'subform_' + $index">
         <div class="remove_button_container">
-                <a class="btn btn-default btn-sm" ng-click="remove(entry)"><span class="glyphicon glyphicon-minus-sign" aria-hidden="true"></span>&nbsp;Remove</a>
+            <a class="btn btn-default btn-sm" ng-click="remove(entry)"><span class="glyphicon glyphicon-minus-sign" aria-hidden="true"></span>&nbsp;<span translate="REMOVE"></span></a>
         </div>
         <div class="form-field form-group" ng-repeat="field in ::fields track by $index">
             <ma-field field="::field" value="entry.values[field.name()]" entry="entry" entity="::targetEntity" form="formName" datastore="::datastore()"></ma-field>
@@ -60,7 +66,7 @@ export default function maEmbeddedListField() {
     </ng-form>
     <div class="form-group">
         <div class="col-sm-offset-2 col-sm-10">
-            <a class="btn btn-default btn-sm" ng-click="addNew()"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>&nbsp;Add new {{ field().name() }}</a>
+            <a class="btn btn-default btn-sm" ng-click="addNew()"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>&nbsp;<span translate="ADD_NEW" translate-values="{ name: field().label().toLowerCase() }"></span></a>
         </div>
     </div>
 </div></div>`

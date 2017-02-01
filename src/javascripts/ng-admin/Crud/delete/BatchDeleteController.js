@@ -1,8 +1,10 @@
 export default class BatchDeleteController {
-    constructor($scope, $state, WriteQueries, notification, view) {
+    constructor($scope, $state, $translate, WriteQueries, progression, notification, view) {
         this.$scope = $scope;
         this.$state = $state;
+        this.$translate = $translate;
         this.WriteQueries = WriteQueries;
+        this.progression = progression;
         this.notification = notification;
         this.view = view;
         this.entity = view.getEntity();
@@ -18,28 +20,28 @@ export default class BatchDeleteController {
     }
 
     batchDelete() {
-        var notification = this.notification,
-            $state = this.$state,
-            entityName = this.entity.name();
+        const entityName = this.entity.name();
+        const { $translate, $state, progression, notification } = this;
+        progression.start();
+        return this.WriteQueries.batchDelete(this.view, this.entityIds)
+            .then(() => $state.go($state.get('list'), angular.extend({ entity: entityName }, $state.params)))
+            // no need to call progression.done() in case of success, as it's called by the view dislayed afterwards
+            .then(() => $translate('BATCH_DELETE_SUCCESS'))
+            .then(text => notification.log(text, { addnCls: 'humane-flatty-success' }))
+            .catch(error => {
+                const errorMessage = this.config.getErrorMessageFor(this.view, error) || 'ERROR_MESSAGE';
+                progression.done();
 
-        this.WriteQueries.batchDelete(this.view, this.entityIds).then(function () {
-            $state.go($state.get('list'), angular.extend({
-                entity: entityName
-            }, $state.params));
-            notification.log('Elements successfully deleted.', { addnCls: 'humane-flatty-success' });
-        }, function (response) {
-            // @TODO: share this method when splitting controllers
-            var body = response.data;
-            if (typeof body === 'object') {
-                body = JSON.stringify(body);
-            }
-
-            notification.log('Oops, an error occured : (code: ' + response.status + ') ' + body, {addnCls: 'humane-flatty-error'});
-        });
+                $translate(errorMessage, {
+                    status: error && error.status,
+                    details: error && error.data && typeof error.data === 'object' ? JSON.stringify(error.data) : {}
+                })
+                    .catch(angular.identity) // See https://github.com/angular-translate/angular-translate/issues/1516
+                    .then(text => notification.log(text, { addnCls: 'humane-flatty-error' }));
+            });
     }
 
     back() {
-
         this.$state.go(this.$state.get('list'), angular.extend({
             entity: this.entity.name()
         }, this.$state.params));
@@ -48,8 +50,11 @@ export default class BatchDeleteController {
     destroy() {
         this.$scope = undefined;
         this.$state = undefined;
+        this.$translate = undefined;
         this.WriteQueries = undefined;
+        this.progression = undefined;
+        this.notification = undefined;
     }
 }
 
-BatchDeleteController.$inject = ['$scope', '$state', 'WriteQueries', 'notification', 'view'];
+BatchDeleteController.$inject = ['$scope', '$state', '$translate', 'WriteQueries', 'progression', 'notification', 'view'];

@@ -24,7 +24,7 @@ A field is the representation of a property of an entity.
 ## General Field Settings
 
 * `nga.field(name, type)`
-Create a new field of the given type. Default type is 'string', so you can omit it. Bundled types include `string`, `text`, `wysiwyg`, `password`, `email`, `date`, `datetime`, `number`, `float`, `boolean`, `choice`, `choices`, `json`, `file`, `reference`, `reference_list`, and `reference_many`.
+Create a new field of the given type. Default type is 'string', so you can omit it. Bundled types include `string`, `text`, `wysiwyg`, `password`, `email`, `date`, `datetime`, `number`, `float`, `boolean`, `choice`, `choices`, `json`, `file`, `reference`, `referenced_list`, `embedded_list` and `reference_many`.
 
     The name may use the *dot notation* to map a nested property. For instance, is the REST endpoint for comments answers as follow:
 
@@ -53,13 +53,17 @@ Create a new field of the given type. Default type is 'string', so you can omit 
 Define the label of the field. Defaults to the uppercased field name.
 
 * `editable(boolean)`
-Define if the field is editable in the edition form. Usefult to display a field without allowing edition (e.g for creation date).
+Define if the field is editable in the edition form. Useful to display a field without allowing edition (e.g for creation date).
+
+* `sortable(boolean)`
+Define if the field is sortable in the list view (default `true`).
+(See ["Sort Columns and Sort Order"](../API-mapping.md#sort-columns-and-sort-order) for a discussion of how to integrate `ng-admin` sorting with your REST backend.)
 
 * `order(number|null)`
 Define the position of the field in the view.
 
 * `isDetailLink(boolean)`
-Tell if the value is a link in the list view. Default to true for the identifier and references field, false otherwise. The link points to the edition view, except for read-only entities, where it points to the show view.
+Tell if the value is a link in the list view. Defaults to true for the identifier and references field, false otherwise. The link points to the edition view, except for read-only entities, where it points to the show view.
 
 * `detailLinkRoute(string)`
 Define the route for a link in the list view, i.e. `isDetailLink` of the field is true. The default is `edit`, hence the link points to the edition view. The other option is `show` to point to the show view.
@@ -183,6 +187,8 @@ Enable HTML sanitization of WYSIWYG Editor value (removal of script tags, etc). 
 
 ## `date` Field Type
 
+Only dates represented by a string (e.g "2015-12-08") are handled by the `date` field type. For an API returning timestamps, add an element interceptor to convert the value to a string.
+
 * `format(string ['yyyy-MM-dd' by default])`
 
 This method uses the Angular `date` filter. Thus, as explained in the [Angular documentation](https://docs.angularjs.org/api/ng/filter/date), input date should be in a normalized format:
@@ -193,6 +199,8 @@ This method uses the Angular `date` filter. Thus, as explained in the [Angular d
 Filter applied to modify date object returned by date picker if needed.
 
 ## `datetime` Field Type
+
+Only dates represented by a string (e.g "2015-12-08T23:00:00.000Z") are handled by the `datetime` field type. For an API returning timestamps, add an element interceptor to convert the value to a string.
 
 * `format(string ['yyyy-MM-dd HH:mm:ss' by default])`
 
@@ -254,7 +262,7 @@ Array of choices used for the boolean proposed values in a filter. By default:
 * `choices(array|function)`
 Define array of choices for `choice` type.
 
-    When given an array, each choice must be an object litteral with both a value and a label.
+    When given an array, each choice must be an object literal with both a value and a label.
 
         nga.field('currency', 'choice')
             .choices([
@@ -694,11 +702,11 @@ var comment = nga.entity('comments');
 post.editionView().fields([
     nga.field('comments', 'reference_many') // Define a 1-N relationship with the comment entity
         .targetEntity(comment) // Target the comment Entity
-        .targetField('body') // the field of the comment entity to use as representation
+        .targetField(nga.field('body')) // the field of the comment entity to use as representation
 ]);
 ```
 
-` reference_many` fields render as a list of labels in rerad context (`listView` and `showView`), and as a select multiple in write context (`creationView` and `editionView`). For that field, ng-admin fetches the related entities one by one:
+` reference_many` fields render as a list of labels in read context (`listView` and `showView`), and as a select multiple in write context (`creationView` and `editionView`). For that field, ng-admin fetches the related entities one by one:
 
 ```
 GET /posts/456 <= get the main entity

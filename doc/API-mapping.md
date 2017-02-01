@@ -112,11 +112,11 @@ myApp.config(['RestangularProvider', function(RestangularProvider) {
 
 ## HTTP Method
 
-The REST standard suggests using the POST method to create a new resource, and PUT to update it. If your API uses a different verb for a given action (e.g. PATCH), then you can force the method to be used for a given entity with `createMethod()` and `updateMethod()`.
+The REST standard suggests using the POST method to create a new resource, and PUT to update it. If your API uses a different verb for a given action (e.g. PATCH), then you can force the method to be used for a given entity with `createMethod()` and `updateMethod()`. The method name should be in lowercase.
 
 ```js
-bookEntity.createMethod('PUT');   // default is POST
-bookEntity.updateMethod('PATCH'); // default is PUT
+bookEntity.createMethod('put');   // default is 'post'
+bookEntity.updateMethod('patch'); // default is 'put'
 ```
 
 ## Pagination
@@ -205,6 +205,8 @@ myApp.config(['RestangularProvider', function(RestangularProvider) {
 }]);
 ```
 
+(If a column is not sortable by your backend, e.g. a computed column, you can disable sorting per-column using [`Field.sortable(false)`](reference/Field.md#general-field-settings).)
+
 ## Filtering
 
 All filter fields are added as a serialized object passed as the value of the `_filters` query parameter. For instance, the following `filterView()` configuration:
@@ -250,7 +252,7 @@ http://your.api.domain/entityName?q=foo&tag=bar
 By default, ng-admin uses filters to fetch entities related to another one. For instance, to fetch all the `comments` related to the `post` entity #123, ng-admin calls the following url:
 
 ```
-http://[baseApiUrl]/comments?filters={"post_id":123}
+http://[baseApiUrl]/comments?_filters={"post_id":123}
 ```
 
 Some API servers only support a special type of URL for that case:
@@ -266,10 +268,10 @@ myApp.config(['$httpProvider', function($httpProvider) {
     $httpProvider.interceptors.push(function() {
         return {
             request: function(config) {
-                // test for /comments?filters={post_id:XXX}
-                if (/\/comments$/.test(config.url) && config.params.filter && config.params.filter.post_id) {
-                    config.url = config.url.replace('comments', 'posts/' + config.params.filter.post_id + '/comments');
-                    delete config.params.filter.post_id;
+                // test for /comments?_filters={post_id:XXX}
+                if (/\/comments$/.test(config.url) && config.params._filters && config.params._filters.post_id) {
+                    config.url = config.url.replace('comments', 'posts/' + config.params._filters.post_id + '/comments');
+                    delete config.params._filters.post_id;
                 }
                 return config;
             },
@@ -291,3 +293,6 @@ var post = nga.entity('posts')
 ## Date
 
 The default date field format is `yyyy-MM-dd`. You can change it with the `format()` method in fields of type `date`.
+```js
+nga.field('publication_date', 'date').format('dd MM yyyy')
+```

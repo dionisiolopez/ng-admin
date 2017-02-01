@@ -13,10 +13,25 @@ export default function maDateField() {
         link: function(scope, element) {
             var field = scope.field();
             scope.name = field.name();
-            scope.rawValue = scope.value;
-            scope.$watch('rawValue', function(rawValue) {
-                scope.value = field.parse()(rawValue);
+            scope.rawValue = scope.value == null ? null : (scope.value instanceof Date ? scope.value : new Date(scope.value));
+
+            scope.$watch('rawValue', function(newValue) {
+                scope.value = field.parse()(newValue);
             });
+
+            scope.$watch('value', (newValue, oldValue) => {
+                if (newValue === oldValue) {
+                    return;
+                }
+
+                if (!newValue) {
+                    scope.rawValue = null;
+                    return;
+                }
+
+                scope.rawValue = scope.value instanceof Date ? scope.value : new Date(scope.value);
+            });
+
             scope.format = field.format();
             if (!scope.format) {
                 scope.format = field.type() === 'date' ? 'yyyy-MM-dd' : 'yyyy-MM-dd HH:mm:ss';
@@ -39,7 +54,8 @@ export default function maDateField() {
 `<div class="input-group datepicker">
     <input
         type="text" ng-model="rawValue" id="{{ name }}" name="{{ name }}" class="form-control"
-        datepicker-popup="{{ format }}" is-open="isOpen" close-text="Close" ng-required="v.required" />
+        uib-datepicker-popup="{{ format }}" is-open="isOpen" ng-required="v.required"
+        close-text="{{ 'CLOSE' | translate }}" clear-text="{{ 'CLEAR' | translate }}" current-text="{{ 'CURRENT' | translate }}"/>
     <span class="input-group-btn">
         <button type="button" class="btn btn-default" ng-click="toggleDatePicker($event)">
             <i class="glyphicon glyphicon-calendar"></i>

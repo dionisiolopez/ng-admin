@@ -20,7 +20,7 @@ Ng-admin is a client-side library, used to build single-page admin applications.
         <link rel="stylesheet" href="node_modules/ng-admin/build/ng-admin.min.css">
     </head>
     <body ng-app="myApp">
-        <div ui-view></div>
+        <div ui-view="ng-admin"></div>
         <script src="node_modules/ng-admin/build/ng-admin.min.js" type="text/javascript"></script>
         <script src="admin.js" type="text/javascript"></script>
     </body>
@@ -207,7 +207,7 @@ The `_page`, `_perPage`, `_sortDir`, and `_sortField` query parameters are added
 
 http://jsonplaceholder.typicode.com/users?_start=1&_end=30&_order=DESC&_sort=id
 
-But it's very easy to map the two flavors. Ng-admin relies on a powerful REST client called [Restangular](https://github.com/mgonto/restangular). To configure Restangular, you must write an *interceptor*, which is a simple function receiving the response from the web server and transforming it before it is passed to ng-admin.
+But it's very easy to map the two flavors. Ng-admin relies on a powerful REST client called [Restangular](https://github.com/mgonto/restangular). To configure Restangular, you must write an *interceptor*, which is a simple function intercepting the request in order to transform it before it is passed to ng-admin.
 
 Here is the configuration script required to map the JSONPlaceholder REST flavor with ng-admin REST flavor:
 
@@ -248,7 +248,7 @@ Add this script to the end of the `admin.js` file, reload the users list view in
 
 If you want to know more about how to map any API with ng-admin, go to the [API Mapping documentation](API-mapping.md).
 
-The definition of the interceptor is usually done only once per API. Now that your ng-admin app knows how to speak with the JSONPlaceholder REST backend, every new endpoint you add will work out of the box. You can check it by adding a list view for another enpoint, `/posts`, which exposes a list of posts:
+The definition of the interceptor is usually done only once per API. Now that your ng-admin app knows how to speak with the JSONPlaceholder REST backend, every new endpoint you add will work out of the box. You can check it by adding a list view for another endpoint, `/posts`, which exposes a list of posts:
 
 ```js
 var myApp = angular.module('myApp', ['ng-admin']);
@@ -339,8 +339,6 @@ post.showView().fields([
 ```
 
 The `referenced_list` field type displays a datagrid for one-to-many relationships. In this examples, by specifying how comments and posts are related (via the `postId` field in the referenced `comments`), ng-admin manages to fetch related entities.
-
-As a side note, you can see that it's possible to create a reference to a non-existent entity (`nga.entity('comments)` creates the related entity for the occasion).
 
 The new post show view is directly accessible from the listView, by clicking on the id of a post in the list.
 
@@ -462,7 +460,7 @@ user.editionView().fields(user.creationView().fields());
 
 ## Making Lists Searchable With Filters
 
-One of the main tasks you have to achieve achieve on list views is searching for specific entries. The current post list isn't very searchable... Let's add filters!
+One of the main tasks you have to achieve on list views is searching for specific entries. The current post list isn't very searchable... Let's add filters!
 
 The `/posts` endpoint from JSONPlaceholder accepts query parameters to filter the results. For instance, to list posts where any of the fields (title or body) contains the string "foo", and where the id of the author is 1234, you can query the following route:
 
@@ -566,7 +564,7 @@ Also, you may want to control the width of columns in the list view. Fortunately
 
 ![updated post list view](images/updated_post_list_view.png)
 
-You can do much more to customize the look and feel of an ng-admin application - including overriding directives templates, or customizing the view template for a given entity. Check the [Theming documentation](Themind.md) for details.
+You can do much more to customize the look and feel of an ng-admin application - including overriding directives templates, or customizing the view template for a given entity. Check the [Theming documentation](Theming.md) for details.
 
 ## Customizing the Sidebar Menu
 
@@ -585,7 +583,7 @@ admin.menu(nga.menu()
 
 `nga.menu()` creates a Menu object. A Menu object represents a menu item, and it can have submenus. Calling `ng.menu()` with an entity parameter sets the menu name, link, and active function automatically. `admin.menu()`, which configures the application menu, expects a root menu object as parameter, and displays the children of this root menu in the sidebar.
 
-Using `admin.menu()`, you can add menu items for pages not handled by ng-admin, hide or reorder entity menus, update the name and icon of menu items, and even add submenus! Check the [Menus documentation](Menus.ms) for more details.
+Using `admin.menu()`, you can add menu items for pages not handled by ng-admin, hide or reorder entity menus, update the name and icon of menu items, and even add submenus! Check the [Menus documentation](Menus.md) for more details.
 
 And if you feel like customizing the home page of the admin app, check out the [Dashboard documentation](Dashboard.md) for a how-to.
 
@@ -604,6 +602,9 @@ myApp.config(['NgAdminConfigurationProvider', function (nga) {
     var admin = nga.application('My First Admin')
       .baseApiUrl('http://jsonplaceholder.typicode.com/'); // main API endpoint
 
+    var comment = nga.entity('comments'); // the API endpoint for users will be 'http://jsonplaceholder.typicode.com/comments/:id
+    admin.addEntity(comment);
+    
     var user = nga.entity('users'); // the API endpoint for users will be 'http://jsonplaceholder.typicode.com/users/:id
         user.listView()
         .fields([

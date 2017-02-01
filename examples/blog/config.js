@@ -3,8 +3,7 @@
 /*
  * This is an example ng-admin configuration for a blog administration composed
  * of three entities: post, comment, and tag. Reading the code and the comments
- * will help you understand how a typical ng-admin application works. You can
- * browse the result online at http://ng-admin.marmelab.com.
+ * will help you understand how a typical ng-admin application works.
  *
  * The remote REST API is simulated in the browser, using FakeRest
  * (https://github.com/marmelab/FakeRest). Look at the JSON responses in the
@@ -74,7 +73,7 @@
             return value.length > 50 ? value.substr(0, 50) + '...' : value;
         }
 
-        var admin = nga.application('ng-admin backend demo') // application main title
+        var admin = nga.application('ng-admin blog demo') // application main title
             .debug(false) // debug disabled
             .baseApiUrl('http://localhost:3000/'); // main API endpoint
 
@@ -138,6 +137,24 @@
             .listActions(['show', 'edit', 'delete'])
             .entryCssClasses(function(entry) { // set row class according to entry
                 return (entry.views > 300) ? 'is-popular' : '';
+            })
+            .exportFields([
+                post.listView().fields(), // fields() without arguments returns the list of fields. That way you can reuse fields from another view to avoid repetition
+                nga.field('category', 'choice') // a choice field is rendered as a dropdown in the edition view
+                    .choices([ // List the choice as object literals
+                        { label: 'Tech', value: 'tech' },
+                        { label: 'Lifestyle', value: 'lifestyle' }
+                    ]),
+                nga.field('subcategory', 'choice')
+                    .choices(function(entry) { // choices also accepts a function to return a list of choices based on the current entry
+                        return subCategories.filter(function (c) {
+                            return c.category === entry.values.category;
+                        });
+                    }),
+            ])
+            .exportOptions({
+                quotes: true,
+                delimiter: ';'
             });
 
         post.creationView()
@@ -208,6 +225,10 @@
         post.showView() // a showView displays one entry in full page - allows to display more data than in a a list
             .fields([
                 nga.field('id'),
+                nga.field('title'),
+                nga.field('teaser'),
+                nga.field('body', 'wysiwyg'),
+                nga.field('published_at', 'date'),
                 nga.field('category', 'choice') // a choice field is rendered as a dropdown in the edition view
                     .choices([ // List the choice as object literals
                         { label: 'Tech', value: 'tech' },
@@ -557,7 +578,7 @@
 
     app.config(['$stateProvider', function ($stateProvider) {
         $stateProvider.state('send-post', {
-            parent: 'main',
+            parent: 'ng-admin',
             url: '/sendPost/:id',
             params: { id: null },
             controller: sendPostController,
@@ -568,15 +589,15 @@
 
     // custom page with menu item
     var customPageTemplate = '<div class="row"><div class="col-lg-12">' +
-            '<ma-view-actions><ma-back-button></ma-back-button></ma-view-actions>' +
             '<div class="page-header">' +
+                '<ma-view-actions><ma-back-button></ma-back-button></ma-view-actions>' +
                 '<h1>Stats</h1>' +
                 '<p class="lead">You can add custom pages, too</p>' +
             '</div>' +
         '</div></div>';
     app.config(['$stateProvider', function ($stateProvider) {
         $stateProvider.state('stats', {
-            parent: 'main',
+            parent: 'ng-admin',
             url: '/stats',
             template: customPageTemplate
         });

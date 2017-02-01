@@ -1,21 +1,25 @@
-import DataStore  from 'admin-config/lib/DataStore/DataStore'
-import Entry  from 'admin-config/lib/Entry'
-import batchDeleteTemplate  from './delete/batchDelete.html'
-import deleteTemplate  from './delete/delete.html'
-import createTemplate  from './form/create.html'
-import editTemplate  from './form/edit.html'
-import listTemplate  from './list/list.html'
-import listLayoutTemplate  from './list/listLayout.html'
-import showTemplate  from './show/show.html'
+import DataStore  from 'admin-config/lib/DataStore/DataStore';
+import Entry  from 'admin-config/lib/Entry';
+import batchDeleteTemplate  from './delete/batchDelete.html';
+import deleteTemplate  from './delete/delete.html';
+import createTemplate  from './form/create.html';
+import editTemplate  from './form/edit.html';
+import listTemplate  from './list/list.html';
+import listLayoutTemplate  from './list/listLayout.html';
+import showTemplate  from './show/show.html';
 
 function templateProvider(viewName, defaultView) {
     return ['$stateParams', 'NgAdminConfiguration', function ($stateParams, Configuration) {
         var customTemplate;
         var view = Configuration().getViewByEntityAndType($stateParams.entity, viewName);
         customTemplate = view.template();
-        if (customTemplate) return customTemplate;
+        if (customTemplate) {
+            return customTemplate;
+        }
         customTemplate = Configuration().customTemplate()(viewName);
-        if (customTemplate) return customTemplate;
+        if (customTemplate) {
+            return customTemplate;
+        }
         return defaultView;
     }];
 }
@@ -46,7 +50,7 @@ function routing($stateProvider) {
             params: {
                 entity: null
             },
-            parent: 'main',
+            parent: 'ng-admin',
             controller: 'ListLayoutController',
             controllerAs: 'llCtrl',
             templateProvider: templateProvider('ListView', listLayoutTemplate),
@@ -142,7 +146,7 @@ function routing($stateProvider) {
 
     $stateProvider
         .state('show', {
-            parent: 'main',
+            parent: 'ng-admin',
             url: '/:entity/show/:id?sortField&sortDir',
             controller: 'ShowController',
             controllerAs: 'showController',
@@ -175,7 +179,7 @@ function routing($stateProvider) {
                             [references[name].targetField()],
                             references[name].targetEntity().name(),
                             references[name].targetEntity().identifier().name()
-                        ).map(entry => dataStore.addEntry(references[name].targetEntity().uniqueId + '_values', entry))
+                        ).map(entry => dataStore.addEntry(references[name].targetEntity().uniqueId + '_values', entry));
                     }
                 }],
                 referencedListData: ['$stateParams', 'ReadQueries', 'view', 'entry', function ($stateParams, ReadQueries, view, entry) {
@@ -189,7 +193,7 @@ function routing($stateProvider) {
                             referencedLists[name].targetFields(),
                             referencedLists[name].targetEntity().name(),
                             referencedLists[name].targetEntity().identifier().name()
-                        ).map(entry => dataStore.addEntry(referencedLists[name].targetEntity().uniqueId + '_list', entry))
+                        ).map(entry => dataStore.addEntry(referencedLists[name].targetEntity().uniqueId + '_list', entry));
                     }
                 }],
                 entryWithReferences: ['dataStore', 'view', 'entry', 'referenceEntries', function(dataStore, view, entry, referenceEntries) {
@@ -202,25 +206,27 @@ function routing($stateProvider) {
                     Object.keys(referencedLists).map(name => {
                         promises[name] = ReadQueries.getReferenceData(referencedLists[name].targetFields(), referencedListData[name]);
                     });
-                    return $q.all(promises)
+                    return $q.all(promises);
                 }],
                 referenceEntriesForReferencedLists: ['dataStore', 'view', 'referenceDataForReferencedLists', function(dataStore, view, referenceDataForReferencedLists) {
                     const referencedLists = view.getReferencedLists();
                     Object.keys(referencedLists).map(referencedListName => {
                         const references = referencedLists[referencedListName].getReferences();
                         for (var name in references) {
-                            if (!referenceDataForReferencedLists[referencedListName][name]) continue;
+                            if (!referenceDataForReferencedLists[referencedListName][name]) {
+                                continue;
+                            }
                             Entry.createArrayFromRest(
                                 referenceDataForReferencedLists[referencedListName][name],
                                 [references[name].targetField()],
                                 references[name].targetEntity().name(),
                                 references[name].targetEntity().identifier().name()
-                            ).map(entry => dataStore.addEntry(references[name].targetEntity().uniqueId + '_values', entry))
+                            ).map(entry => dataStore.addEntry(references[name].targetEntity().uniqueId + '_values', entry));
                         }
-                    })
+                    });
                     return true;
                 }],
-                prepare: ['view', '$stateParams', 'dataStore', 'entry', '$window', '$injector', function(view, $stateParams, dataStore, entry, $window, $injector) {
+                prepare: ['view', '$stateParams', 'dataStore', 'entry', 'entryWithReferences', 'referencedListEntries', 'referenceEntriesForReferencedLists', '$window', '$injector', function(view, $stateParams, dataStore, entry, entryWithReferences, referencedListEntries, referenceEntriesForReferencedLists, $window, $injector) {
                     return view.prepare() && $injector.invoke(view.prepare(), view, {
                         query: $stateParams,
                         datastore: dataStore,
@@ -235,7 +241,7 @@ function routing($stateProvider) {
 
     $stateProvider
         .state('create', {
-            parent: 'main',
+            parent: 'ng-admin',
             url: '/:entity/create?{defaultValues:json}',
             controller: 'FormController',
             controllerAs: 'formController',
@@ -249,6 +255,10 @@ function routing($stateProvider) {
             },
             resolve: {
                 dataStore: () => new DataStore(),
+                previousState: ['$state', '$stateParams', ($state, $stateParams) => ({
+                    name: $state.current.name || 'edit',
+                    params: Object.keys($state.params).length > 0 ? $state.params : $stateParams,
+                })],
                 view: viewProvider('CreateView'),
                 entry: ['$stateParams', 'dataStore', 'view', function ($stateParams, dataStore, view) {
                     var entry = Entry.createForFields(view.getFields(), view.entity.name());
@@ -271,7 +281,7 @@ function routing($stateProvider) {
                         ).map(entry => dataStore.addEntry(choices[name].targetEntity().uniqueId + '_choices', entry));
                     }
                 }],
-                prepare: ['view', '$stateParams', 'dataStore', 'entry', '$window', '$injector', function(view, $stateParams, dataStore, entry, $window, $injector) {
+                prepare: ['view', '$stateParams', 'dataStore', 'entry', 'choiceEntries', '$window', '$injector', function(view, $stateParams, dataStore, entry, choiceEntries, $window, $injector) {
                     return view.prepare() && $injector.invoke(view.prepare(), view, {
                         query: $stateParams,
                         datastore: dataStore,
@@ -286,7 +296,7 @@ function routing($stateProvider) {
 
     $stateProvider
         .state('edit', {
-            parent: 'main',
+            parent: 'ng-admin',
             url: '/:entity/edit/:id?sortField&sortDir',
             controller: 'FormController',
             controllerAs: 'formController',
@@ -301,9 +311,13 @@ function routing($stateProvider) {
             },
             resolve: {
                 dataStore: () => new DataStore(),
+                previousState: ['$state', '$stateParams', ($state, $stateParams) => ({
+                    name: $state.current.name || 'edit',
+                    params: Object.keys($state.params).length > 0 ? $state.params : $stateParams,
+                })],
                 view: viewProvider('EditView'),
                 rawEntry: ['$stateParams', 'ReadQueries', 'view', function ($stateParams, ReadQueries, view) {
-                    return ReadQueries.getOne(view.getEntity(), view.type, $stateParams.id, view.identifier(), view.getUrl());
+                    return ReadQueries.getOne(view.getEntity(), view.type, $stateParams.id, view.identifier(), view.getUrl($stateParams.id));
                 }],
                 entry: ['view', 'rawEntry', function(view, rawEntry) {
                     return view.mapEntry(rawEntry);
@@ -319,7 +333,7 @@ function routing($stateProvider) {
                             [references[name].targetField()],
                             references[name].targetEntity().name(),
                             references[name].targetEntity().identifier().name()
-                        ).map(entry => dataStore.addEntry(references[name].targetEntity().uniqueId + '_values', entry))
+                        ).map(entry => dataStore.addEntry(references[name].targetEntity().uniqueId + '_values', entry));
                     }
                 }],
                 referencedListData: ['$stateParams', 'ReadQueries', 'view', 'entry', function ($stateParams, ReadQueries, view, entry) {
@@ -333,7 +347,7 @@ function routing($stateProvider) {
                             referencedLists[name].targetFields(),
                             referencedLists[name].targetEntity().name(),
                             referencedLists[name].targetEntity().identifier().name()
-                        ).map(entry => dataStore.addEntry(referencedLists[name].targetEntity().uniqueId + '_list', entry))
+                        ).map(entry => dataStore.addEntry(referencedLists[name].targetEntity().uniqueId + '_list', entry));
                     }
                 }],
                 entryWithReferences: ['dataStore', 'view', 'entry', 'referenceEntries', function(dataStore, view, entry, referenceEntries) {
@@ -360,25 +374,27 @@ function routing($stateProvider) {
                     Object.keys(referencedLists).map(name => {
                         promises[name] = ReadQueries.getReferenceData(referencedLists[name].targetFields(), referencedListData[name]);
                     });
-                    return $q.all(promises)
+                    return $q.all(promises);
                 }],
                 referenceEntriesForReferencedLists: ['dataStore', 'view', 'referenceDataForReferencedLists', function(dataStore, view, referenceDataForReferencedLists) {
                     const referencedLists = view.getReferencedLists();
                     Object.keys(referencedLists).map(referencedListName => {
                         const references = referencedLists[referencedListName].getReferences();
                         for (var name in references) {
-                            if (!referenceDataForReferencedLists[referencedListName][name]) continue;
+                            if (!referenceDataForReferencedLists[referencedListName][name]) {
+                                continue;
+                            }
                             Entry.createArrayFromRest(
                                 referenceDataForReferencedLists[referencedListName][name],
                                 [references[name].targetField()],
                                 references[name].targetEntity().name(),
                                 references[name].targetEntity().identifier().name()
-                            ).map(entry => dataStore.addEntry(references[name].targetEntity().uniqueId + '_values', entry))
+                            ).map(entry => dataStore.addEntry(references[name].targetEntity().uniqueId + '_values', entry));
                         }
-                    })
+                    });
                     return true;
                 }],
-                prepare: ['view', '$stateParams', 'dataStore', 'entry', '$window', '$injector', function(view, $stateParams, dataStore, entry, $window, $injector) {
+                prepare: ['view', '$stateParams', 'dataStore', 'entry', 'referenceEntriesForReferencedLists', 'choiceEntries', 'entryWithReferences', '$window', '$injector', function(view, $stateParams, dataStore, entry, referenceEntriesForReferencedLists, choiceEntries, entryWithReferences, $window, $injector) {
                     return view.prepare() && $injector.invoke(view.prepare(), view, {
                         query: $stateParams,
                         datastore: dataStore,
@@ -393,7 +409,7 @@ function routing($stateProvider) {
 
     $stateProvider
         .state('delete', {
-            parent: 'main',
+            parent: 'ng-admin',
             url: '/:entity/delete/:id',
             controller: 'DeleteController',
             controllerAs: 'deleteController',
@@ -416,7 +432,7 @@ function routing($stateProvider) {
                 entry: ['view', 'rawEntry', function(view, rawEntry) {
                     return view.mapEntry(rawEntry);
                 }],
-                prepare: ['view', '$stateParams', 'dataStore', 'entry', '$window', function(view, $stateParams, dataStore, entry, $window) {
+                prepare: ['view', '$stateParams', 'dataStore', 'entry', '$window', '$injector', function(view, $stateParams, dataStore, entry, $window, $injector) {
                     return view.prepare() && $injector.invoke(view.prepare(), view, {
                         query: $stateParams,
                         datastore: dataStore,
@@ -432,7 +448,7 @@ function routing($stateProvider) {
 
     $stateProvider
         .state('batchDelete', {
-            parent: 'main',
+            parent: 'ng-admin',
             url: '/:entity/batch-delete/{ids:json}',
             controller: 'BatchDeleteController',
             controllerAs: 'batchDeleteController',

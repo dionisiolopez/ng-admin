@@ -18,6 +18,8 @@ export default function maChoiceField($compile) {
             return {
                 pre: function(scope, element) {
                     var field = scope.field();
+                    var attributes = field.attributes();
+                    scope.placeholder = (attributes && attributes.placeholder) || 'FILTER_VALUES';
                     scope.name = field.name();
                     scope.v = field.validation();
                     scope.$watch('value', function(newValue, oldValue) {
@@ -35,19 +37,37 @@ export default function maChoiceField($compile) {
                         itemsFilter = '';
                     }
 
-                    var choices = (typeof scope.choices == 'function' && scope.choices()) ? scope.choices() : (field.choices ? field.choices() : []);
-                    var attributes = field.attributes();
-                    scope.placeholder = (attributes && attributes.placeholder) || 'Filter values';
+                    const choices = scope.choices ? scope.choices : field.choices ? field.choices() : [];
+                    let choicesFactory;
+
+                    if (typeof choices === 'function' && choices(scope.entry)) {
+                        choicesFactory = choices;
+                        scope.choices = choicesFactory(scope.entry);
+                    } else {
+                        scope.choices = choices ? choices : [];
+                    }
 
                     var template = `
                         <ui-select ng-model="$parent.value" ng-required="v.required" id="{{ name }}" name="{{ name }}">
-                            <ui-select-match allow-clear="{{ !v.required }}" placeholder="{{ placeholder }}">{{ $select.selected.label }}</ui-select-match>
-                            <ui-select-choices ${refreshAttributes} repeat="item.value as item in choices ${itemsFilter}  track by $index">
-                                {{ item.label }}
+                            <ui-select-match allow-clear="{{ !v.required }}" placeholder="{{ placeholder | translate }}">{{ $select.selected.label | translate }}</ui-select-match>
+                            <ui-select-choices ${refreshAttributes} repeat="item.value as item in choices ${itemsFilter} track by $index">
+                                {{ item.label | translate }}
                             </ui-select-choices>
                         </ui-select>`;
 
-                    scope.choices = typeof(choices) === 'function' ? choices(scope.entry) : choices;
+                    // as choices may be a function depending of another entry field, we need to watch the whole entry
+                    scope.$watch('entry', (newEntry, oldEntry) => {
+                        if (!choicesFactory) {
+                            return;
+                        }
+
+                        const oldChoices = scope.choices;
+                        scope.choices = choicesFactory(newEntry);
+                        if (!angular.equals(scope.choices, oldChoices)) {
+                            scope.value = null;
+                        }
+                    }, true);
+
                     element.html(template);
 
                     var select = element.children()[0];

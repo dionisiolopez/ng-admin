@@ -1,7 +1,20 @@
 import angular from 'angular';
 
+require('textangular/dist/textAngular-sanitize');
+require('textangular/dist/textAngularSetup');
+require('textangular/dist/textAngular');
+
+require('angular-ui-codemirror');
+
 var CrudModule = angular.module('crud', [
-    'ui.router', 'ui.bootstrap', 'ngSanitize', 'textAngular', 'ngInflection', 'ui.codemirror', 'ngFileUpload', 'ngNumeraljs'
+    'ui.router',
+    'ui.bootstrap',
+    'ui.codemirror',
+    'ngSanitize',
+    'textAngular',
+    'ngInflection',
+    'ngFileUpload',
+    'ngNumeraljs',
 ]);
 
 CrudModule.controller('ListLayoutController', require('./list/ListLayoutController'));
@@ -21,7 +34,6 @@ CrudModule.service('RestWrapper', require('./misc/RestWrapper'));
 
 CrudModule.directive('maJsonValidator', require('./validator/maJsonValidator'));
 
-CrudModule.directive('datepickerPopup', require('./field/datepickerPopup'));
 CrudModule.directive('maField', require('./field/maField'));
 CrudModule.directive('maButtonField', require('./field/maButtonField'));
 CrudModule.directive('maChoiceField', require('./field/maChoiceField'));
@@ -49,7 +61,6 @@ CrudModule.directive('maDatagridItemSelector', require('./list/maDatagridItemSel
 CrudModule.directive('maDatagridMultiSelector', require('./list/maDatagridMultiSelector'));
 CrudModule.directive('maFilterForm', require('./filter/maFilterForm'));
 CrudModule.directive('maFilter', require('./filter/maFilter'));
-CrudModule.directive('maFilterButton', require('./filter/maFilterButton'));
 
 CrudModule.directive('maColumn', require('./column/maColumn'));
 CrudModule.directive('maBooleanColumn', require('./column/maBooleanColumn'));
@@ -70,12 +81,14 @@ CrudModule.directive('maWysiwygColumn', require('./column/maWysiwygColumn'));
 CrudModule.directive('maBackButton', require('./button/maBackButton'));
 CrudModule.directive('maCreateButton', require('./button/maCreateButton'));
 CrudModule.directive('maEditButton', require('./button/maEditButton'));
+CrudModule.directive('maFilterButton', require('./button/maFilterButton'));
 CrudModule.directive('maFilteredListButton', require('./button/maFilteredListButton'));
 CrudModule.directive('maShowButton', require('./button/maShowButton'));
 CrudModule.directive('maListButton', require('./button/maListButton'));
 CrudModule.directive('maDeleteButton', require('./button/maDeleteButton'));
 CrudModule.directive('maBatchDeleteButton', require('./button/maBatchDeleteButton'));
 CrudModule.directive('maExportToCsvButton', require('./button/maExportToCsvButton'));
+CrudModule.directive('maSubmitButton', require('./button/maSubmitButton'));
 CrudModule.directive('maViewBatchActions', require('./button/maViewBatchActions'));
 
 CrudModule.directive('maShowItem', require('./show/maShowItem'));

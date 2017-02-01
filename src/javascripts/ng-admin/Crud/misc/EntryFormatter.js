@@ -15,7 +15,6 @@ export default class EntryFormatter {
     formatField(field) {
         var label = field.label() || field.name();
         var type = field.type();
-
         switch (type) {
             case 'boolean':
             case 'choice':
@@ -36,13 +35,12 @@ export default class EntryFormatter {
                 return function (entry) {
                     return {
                         name: label,
-                        value: field._template(entry)
+                        value: field.getTemplateValue(entry)
                     };
                 };
             case 'number':
             case 'float':
-                var format = field.format();
-                var formatNumber = this.formatNumber(format);
+                var formatNumber = this.formatNumber(field.format());
                 return function (entry) {
                     return {
                         name: label,
@@ -70,7 +68,13 @@ export default class EntryFormatter {
                         value: entry.listValues[field.name()]
                     };
                 };
-            case 'referenced_many':
+            case 'reference_many':
+                return function (entry) {
+                    return {
+                        name: label,
+                        value: entry.listValues[field.name()].join(', ')
+                    };
+                };
             case 'referenced_list':
                 return; //ignored
         }
@@ -82,11 +86,15 @@ export default class EntryFormatter {
         return function formatEntry(entry) {
             var result = {};
             fieldsFormatters.map(function (formatter) {
-                if (!formatter) return;
+                if (!formatter) {
+                    return;
+                }
                 return formatter(entry);
             })
             .forEach(function (field) {
-                if (!field) return;
+                if (!field) {
+                    return;
+                }
                 result[field.name] = field.value;
             });
 

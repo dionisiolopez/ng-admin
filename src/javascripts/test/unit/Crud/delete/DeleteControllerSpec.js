@@ -5,34 +5,42 @@ describe('DeleteController', function () {
         Entity = require('admin-config/lib/Entity/Entity'),
         humane = require('humane-js');
 
-    var $scope, $window, $state, $q, writeQueries, notification, params, view, entry;
+    var $scope, $window, $q;
     beforeEach(inject(function ($controller, $rootScope, _$window_, _$q_) {
         $scope = $rootScope.$new();
         $window = _$window_;
         $q = _$q_;
-        $state = {
+    }));
+
+    describe('deleteOne', function() {
+        var $translate = text => text;
+        var Configuration = () => ({
+            getErrorMessageFor: () => '',
+        });
+        var $state = {
             go: jasmine.createSpy('$state.go'),
             get: jasmine.createSpy('$state.get'),
             params: {}
         };
-        writeQueries = {
+        var writeQueries = {
             deleteOne: jasmine.createSpy('writeQueries.deleteOne').and.callFake(() => $q.when())
         };
-        notification = humane;
-        params = {
+        var progression = {
+            start: () => true,
+            done: () => true,
+        };
+        var notification = humane;
+        var params = {
             id: 3,
             entity: new Entity('post')
         };
-        view = {
+        var view = {
             title: () => 'My view',
             description: () => 'Description',
             actions: () => [],
             getEntity: () => new Entity('post')
         };
-        entry = {};
-    }));
-
-    describe('deleteOne', function() {
+        var entry = {};
         describe('on success', function() {
             it('should delete given entity', function(done) {
                 // assume we are on post #3 deletion page
@@ -45,7 +53,7 @@ describe('DeleteController', function () {
                     getEntity: () => entity
                 };
 
-                let deleteController = new DeleteController($scope, $window, $state, $q, writeQueries, notification, {
+                let deleteController = new DeleteController($scope, $window, $state, $q, $translate, writeQueries, Configuration, progression, notification, {
                     id: deletedId,
                     entity: 'post'
                 }, view, entry);
@@ -72,7 +80,7 @@ describe('DeleteController', function () {
                     getEntity: () => entity
                 };
 
-                let deleteController = new DeleteController($scope, $window, $state, $q, writeQueries, notification, {
+                let deleteController = new DeleteController($scope, $window, $state, $q, $translate, writeQueries, Configuration, progression, notification, {
                     id: deletedId,
                     entity: 'post'
                 }, view, entry);
@@ -103,7 +111,7 @@ describe('DeleteController', function () {
                 };
 
                 let $window = { history: { back: jasmine.createSpy('$window.history.back') } };
-                let deleteController = new DeleteController($scope, $window, $state, $q, writeQueries, notification, {
+                let deleteController = new DeleteController($scope, $window, $state, $q, $translate, writeQueries, Configuration, progression, notification, {
                     id: commentId,
                     entity: 'comment'
                 }, view, entry);
